@@ -1,0 +1,73 @@
+// 必要なモジュールのインポート
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import express, { Request, Response } from 'express';
+
+//定数の定義
+const PORT: number = 8001;
+
+// Expressアプリケーションのインスタンスを作成
+const app = express();
+
+// PrismaClientのインスタンスを作成
+const prisma = new PrismaClient();
+
+// ミドルウェアの設定
+// JSONリクエストボディの解析を有効化
+// todo: 何をしているか調べる
+app.arguments(express.json());
+
+//リクエストボディの型定義
+interface RegisterRequestBody {
+  username: string;
+  email: string;
+  password: string;
+}
+
+//レスポンスで返すユーザー情報の型定義
+interface UserResponse {
+  id: number;
+  username: string;
+  email: string;
+}
+
+// ユーザー登録のルート
+app.post(
+  '/api/auth/register',
+  async (req: Request<{}, {}, RegisterRequestBody>, res: Response) => {
+    try {
+      // リクエストボディからユーザー情報を取得
+      const { username, email, password } = req.body;
+      // パスワードをハッシュ化
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // 新しいユーザーをDBに作成
+      const user = await prisma.user.create({
+        data: {
+          username,
+          email,
+          password: hashedPassword,
+        },
+      });
+
+      // クライアントに返すユーザー情報を作成
+      const userResponse: UserResponse = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      };
+
+      // ステータスコード201(created)と共にユーザー情報を返す
+      return res.status(201).json({ user: userResponse });
+    } catch (error) {
+      // エラーハンドリング
+      console.error('Registration error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+// サーバーの起動
+app.listen(PORT, () => {
+  console.log(`Server is running on PORT ${PORT}`);
+});
