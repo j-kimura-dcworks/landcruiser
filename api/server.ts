@@ -1,10 +1,21 @@
 // 必要なモジュールのインポート
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+
+// 最初に環境変数を読み込む
+dotenv.config();
 
 //定数の定義
-const PORT: number = 8001;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8001;
+const SECRET_KEY = process.env.SECRET_KEY;
+
+if (!SECRET_KEY) {
+  console.error('SECRET_KEY is not defined in the environment variables');
+  process.exit(1);
+}
 
 // Expressアプリケーションのインスタンスを作成
 const app = express();
@@ -25,6 +36,11 @@ interface RegisterRequestBody {
   password: string;
 }
 
+interface LoginRequestBody {
+  email: string;
+  password: string;
+}
+
 //レスポンスで返すユーザー情報の型定義
 interface UserResponse {
   id: number;
@@ -32,7 +48,7 @@ interface UserResponse {
   email: string;
 }
 
-// ユーザー登録のルート
+// ユーザー登録API
 app.post(
   '/api/auth/register',
   async (req: Request<{}, {}, RegisterRequestBody>, res: Response) => {
@@ -62,7 +78,41 @@ app.post(
       return res.status(201).json({ user: userResponse });
     } catch (error) {
       // エラーハンドリング
-      console.error('Registration error:', error);
+      console.error('Registration error: ', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+// ログインAPI
+app.post(
+  '/api/auth/login',
+  async (req: Request<{}, {}, LoginRequestBody>, res: Response) => {
+    try {
+      // リクエストボディからユーザー情報を取得
+      const { email, password } = req.body;
+
+      // Emailからユーザー情報を探す
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        return res.status(401).json({ error: 'Eメールまたはパスワードが違います' });
+      }
+
+      // パスワードが正しいか検証
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Eメールまたはパスワードが違います' });
+      }
+
+      // jsonWebTokenでトークンを発行する
+      const token = jwt.sign({ id: user.id }, SECRET_KEY, {
+        expiresIn: '1d',
+      });
+
+      return res.json({ token });
+    } catch (error) {
+      //エラーハンドリング
+      console.error('Login error: ', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   }
