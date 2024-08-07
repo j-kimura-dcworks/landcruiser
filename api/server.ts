@@ -13,9 +13,10 @@ const app = express();
 const prisma = new PrismaClient();
 
 // ミドルウェアの設定
-// JSONリクエストボディの解析を有効化
-// todo: 何をしているか調べる
-app.arguments(express.json());
+// express.json() ミドルウェアを使用して、受信したHTTPリクエストのボディを解析
+// この設定により、クライアントから送信されたJSONデータを自動的にJavaScriptオブジェクトに変換
+// 例: クライアントが {"username": "john"} を送信すると、req.body.username で "john" にアクセス可能
+app.use(express.json());
 
 //リクエストボディの型定義
 interface RegisterRequestBody {
