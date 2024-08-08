@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import express from 'express';
+import authRoutes from './routes/authRoutes';
+import { errorHandler } from "./middlewares/errorHandler";
 
 // Expressアプリケーションのインスタンスを作成
 const app = express();
