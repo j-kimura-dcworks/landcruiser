@@ -2,10 +2,17 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "./src", // srcをルートディレクトリに指定
+    "baseUrl": "./src", // モジュールのインポート基準ディレクトリを指定
+    "paths": {
+      "@/*": ["./*"] // srcディレクトリ内のファイルを簡単に参照できる
+    },
     "typeRoots": ["./node_modules/@types", "../node_modules/@types"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node"
   },
-  "include": ["./**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
