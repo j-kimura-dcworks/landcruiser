@@ -11,7 +11,7 @@ const server = app.listen(PORT, () => {
 });
 
 // グレースフルシャットダウンの設定
-process.on('SIGHT', async () => {
+process.on('SIGINT', async () => {
   // Prismaクライアントとの接続を切断
   await prisma.$disconnect();
 
