@@ -16,6 +16,7 @@ export const registerUser = async (
       email,
       password: hashedPassword,
     },
+    // DBから返す値を指定（パスワードを除外）
     select: { id: true, username: true, email: true },
   });
 
