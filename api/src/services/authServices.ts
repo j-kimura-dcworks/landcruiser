@@ -9,18 +9,22 @@ export const registerUser = async (
   email: string,
   password: string
 ) => {
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: {
-      username,
-      email,
-      password: hashedPassword,
-    },
-    // DBから返す値を指定（パスワードを除外）
-    select: { id: true, username: true, email: true },
-  });
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+      },
+      // DBから返す値を指定（パスワードを除外）
+      select: { id: true, username: true, email: true },
+    });
 
-  return user;
+    return user;
+  } catch (error) {
+    console.error('Error in registerUser:', error);
+  }
 };
 
 // ユーザーログインサービス
